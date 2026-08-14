@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Dashboard') · CrudKit</title>
+    <title>@yield('title', 'Dashboard') · {{ \App\Models\Setting::get('app_name', 'CrudKit') }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,13 +108,35 @@
     </style>
 </head>
 <body class="h-full bg-paper">
-<div class="min-h-full flex">
+<div class="min-h-full flex" x-data="{ mobileNavOpen: false }">
 
-    {{-- Sidebar --}}
-    <aside class="w-64 bg-ink text-gray-300 flex-shrink-0 hidden md:flex md:flex-col">
-        <div class="h-16 flex items-center gap-2.5 px-6">
-            <span class="font-mono text-forest-100 bg-forest-600/30 border border-forest-600/50 rounded w-6 h-6 flex items-center justify-center text-sm">&gt;</span>
-            <span class="font-display font-semibold text-white tracking-tight">CrudKit</span>
+    {{-- Mobile backdrop --}}
+    <div x-show="mobileNavOpen" x-cloak
+         @click="mobileNavOpen = false"
+         class="fixed inset-0 bg-black/40 z-30 md:hidden"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+    ></div>
+
+    {{-- Sidebar: fixed slide-in drawer on mobile, static column on md+ --}}
+    <aside
+        class="w-64 bg-ink text-gray-300 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 md:static md:translate-x-0"
+        :class="mobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
+    >
+        <div class="h-16 flex items-center justify-between gap-2.5 px-6">
+            <div class="flex items-center gap-2.5">
+                <span class="font-mono text-forest-100 bg-forest-600/30 border border-forest-600/50 rounded w-6 h-6 flex items-center justify-center text-sm">&gt;</span>
+                <span class="font-display font-semibold text-white tracking-tight">{{ \App\Models\Setting::get('app_name', 'CrudKit') }}</span>
+            </div>
+            <button @click="mobileNavOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
         <nav class="flex-1 px-3 space-y-0.5 mt-2">
             @php $navLink = fn($active) => 'flex items-center gap-2 px-3 py-2 text-sm font-medium border-l-2 transition-colors ' . ($active ? 'border-forest text-white bg-white/5' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'); @endphp
@@ -140,8 +162,45 @@
 
     {{-- Main --}}
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 justify-between">
-            <h1 class="font-display text-lg font-semibold text-gray-900">@yield('title', 'Dashboard')</h1>
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <button @click="mobileNavOpen = true" class="md:hidden text-gray-500 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                    </svg>
+                </button>
+                <h1 class="font-display text-lg font-semibold text-gray-900">@yield('title', 'Dashboard')</h1>
+            </div>
+
+
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open" @click.outside="open = false"
+                        class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                    <span class="w-8 h-8 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center font-medium text-xs">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                    </span>
+                    <span class="font-medium">{{ auth()->user()->name ?? 'Account' }}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+
+                <div x-show="open" x-cloak x-transition
+                    class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50">
+                    <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        Profile
+                    </a>
+                    <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        Settings
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">
+                        @csrf
+                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                            Log out
+                        </button>
+                    </form>
+                </div>
+            </div>
         </header>
 
         <main class="flex-1 p-6">

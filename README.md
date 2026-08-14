@@ -1,58 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CrudKit — Laravel Admin Starter
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A complete Laravel admin panel starter: full CRUD, server-side Yajra
+DataTables, Excel/PDF export, a dashboard with charts, settings, user
+profile, and access control — all wired up out of the box, with a
+distinctive design instead of default Tailwind/indigo.
 
-## About Laravel
+Built because most "Laravel + Yajra + export" guidance online is scattered
+across free tutorials and half-finished GitHub repos. This bundles the
+pattern into one clean, working, good-looking starting point.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## What's included
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **BaseCrudController** — list / create / edit / delete / export in ~15
+  lines per module (see `ProductController` for the full worked example)
+- **BaseDataTable** — Yajra server-side DataTable, custom-styled to match
+  the admin theme (not default jQuery DataTables look)
+- **BaseExport** — Maatwebsite export supporting Excel, CSV, and PDF
+  (via dompdf), mirroring your DataTable's filters so "export what I'm
+  looking at" works by default
+- **Dashboard** — stat cards + Chart.js charts (status breakdown, 7-day
+  trend), built from live data
+- **Settings** — a simple key/value settings screen (app name, support
+  email, etc.) — the app name you set here reflects live in the sidebar
+  and browser tab
+- **Profile** — the logged-in user can update their name/email and
+  change their password
+- **Admin access control** — an `is_admin` flag + middleware restricts
+  `/admin` to admin users only; the first person to register on a fresh
+  install is auto-promoted to admin
+- **Restyled auth** — login and register pages match the admin's design
+  system, not Breeze's default look
+- **Distinctive design system** — forest/gold/ink palette, Space
+  Grotesk + Inter + IBM Plex Mono typography, left-accent-bar nav,
+  dot-badge status pills — configurable in one `tailwind.config` block
+  per page
+- **Responsive** — sidebar becomes a slide-in mobile drawer below the
+  `md` breakpoint
+- **Icon-based row actions + custom confirm modal** — no native browser
+  `alert()`/`confirm()` anywhere in the UI
+- **Toast notifications** — success messages appear top-right and
+  auto-dismiss
+- **One fully worked example module** (Products) — copy this file-by-file
+  when adding your own modules
+- **Demo seeder** — 500 fake rows so search, pagination, and export all
+  demo realistically from the first run
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+- PHP 8.3+
+- Laravel 13.x
+- Composer
+- Node (for Breeze's asset build)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Quickstart
 
 ```bash
-composer require laravel/boost --dev
+# 1. Create a fresh Laravel project, then copy this kit's app/, database/,
+#    resources/, and routes/admin.php into it (see "Setup on a fresh
+#    Laravel install" below if starting from zero)
+composer install
 
-php artisan boost:install
+# 2. Copy env and generate key
+cp .env.example .env
+php artisan key:generate
+
+# 3. Set your DB credentials in .env, then migrate
+php artisan migrate
+
+# 4. Seed demo data (500 fake products)
+php artisan db:seed --class=DemoDataSeeder
+
+# 5. Set up auth scaffolding (Breeze)
+php artisan breeze:install blade
+npm install && npm run build
+
+# 6. Register middleware alias (see "Admin access control" below)
+
+# 7. Serve
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Register your first account — it's automatically made an admin. Visit
+`/admin` to see the dashboard, then `/admin/products` for the full
+working CRUD example: search, sort, paginate, export to Excel/CSV/PDF,
+and create/edit/delete via modal.
 
-## Contributing
+## Admin access control
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Only users with `is_admin = true` can access `/admin`. The first
+registered user is promoted automatically; anyone who registers after
+that needs to be promoted manually:
 
-## Code of Conduct
+```bash
+php artisan tinker
+>>> User::find(2)->update(['is_admin' => true]);
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+This requires registering the `admin` middleware alias in
+`bootstrap/app.php`, inside `->withMiddleware()`:
 
-## Security Vulnerabilities
+```php
+$middleware->alias([
+    'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+]);
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Customizing the brand
+
+- **Name**: Settings → App Name (reflects live in the sidebar/title), or
+  set a fallback via `APP_NAME` in `.env`
+- **Colors/fonts**: each page (`admin/layouts/app.blade.php`,
+  `auth/login.blade.php`, `auth/register.blade.php`) has its own
+  `tailwind.config` script block — edit the `forest`/`gold`/`ink`/`paper`
+  color values and `fontFamily` entries to rebrand
+
+## Adding your own module
+
+See [`docs/ADDING_A_MODULE.md`](ADDING_A_MODULE.md) — takes about
+10 minutes once you're used to the pattern.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT — use it in client work or your own products. Attribution appreciated
+but not required.

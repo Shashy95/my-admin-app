@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
  * All admin routes live behind auth + a prefix. Add a new CRUD module by
  * copying the Products block below -- see docs/ADDING_A_MODULE.md.
  */
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
