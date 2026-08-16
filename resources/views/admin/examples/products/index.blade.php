@@ -38,8 +38,12 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border p-4">
-        {{ $dataTable->html()->table(['class' => 'display w-full text-sm']) }}
+    <div class="w-full overflow-x-auto">
+        <div class="min-w-full">
+            {{ $dataTable->html()->table(['class' => 'display w-full text-sm']) }}
+        </div>
     </div>
+</div>
 
     {{-- Create modal --}}
     <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
